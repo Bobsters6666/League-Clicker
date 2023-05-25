@@ -6,15 +6,19 @@
       <p class="next-stage"> {{ stage + 1 }}</p>
     </div>
 
-    <div class="minion-counter">
+    <div class="minion-counter" :class="{hide: isTrainingGround}">
       <img src="../assets/misc/stage_demon.png" alt="" class="src">
       {{ enemies.minion.current }} / {{ enemies.minion.total }}
     </div>
 
+    <button class="fight-boss-button" :class="{show: isTrainingGround}"
+    @click="handleFightBossButtonClicked">Fight Boss</button>
+
     <div class="hp-bar">
-      <div class="hp-remaining">
-      </div>
-      <p> {{ enemies.displaying.name }} </p>
+      <div class="hp-remaining"></div>
+      <div class="boss-timer" :class="{show: isBoss}"></div>
+      <div class="boss-timer-counter" :class="{show: isBoss}">{{ enemies.boss.currentTime.toFixed(1) }}</div>
+      <p class="enemy-name"> {{ enemies.displaying.name }} </p>
       <p class="current-health"> <span> HP </span> {{ Math.ceil(enemies.displaying.currentHealth) }}</p>
     </div>
     <div class="coins">
@@ -30,10 +34,20 @@ export default {
   props: {
     msg: String
   },
+
+  methods: {
+    handleFightBossButtonClicked() {
+      this.enemies.minion.current += 1
+      this.$store.commit('updateTrainingGroundStatus', false)
+    }
+  },
+
   computed: {
     coins() {return this.$store.state.coins},
     stage() {return this.$store.state.stage;},
-    enemies() {return this.$store.state.enemies}
+    enemies() {return this.$store.state.enemies},
+    isBoss() {return this.$store.state.isBoss},
+    isTrainingGround() {return this.$store.state.isTrainingGround}
   }
 }
 </script>
@@ -90,6 +104,9 @@ export default {
   display: flex;
   flex-direction: row;
 }
+.minion-counter.hide {
+  display: none;
+}
 .hp-bar {
   display: flex;
   align-items: center;
@@ -115,7 +132,47 @@ export default {
   background: linear-gradient(to right, rgba(240, 26, 10, 0.936) 83%, #df941c 92%);
   border-radius: 5px;
 }
-
+.boss-timer {
+  position: absolute;
+  width: 100%;
+  height: 7px;
+  bottom: -22px;
+  left: 0;
+  background: linear-gradient(to right, rgba(248, 133, 18, 0.936) 89%, #ebf614 92%);
+  display: none;
+}
+.boss-timer-counter {
+  position: absolute;
+  bottom: -32px;
+  right: -50px;
+  color: white;
+  font-size: 18px;
+  display: none;
+}
+.boss-timer.show, .boss-timer-counter.show {
+  display: block;
+}
+.fight-boss-button {
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  position: absolute;
+  top: 50px;
+  right: 20px;
+  text-align: center;
+  padding: 10px 15px;
+  border-radius: 10px;
+  background-color: darkorange;
+  border:rgb(250, 77, 25) solid 5px ;
+  display: none
+}
+.fight-boss-button.show {
+  display: block;
+}
+.fight-boss-button:hover {
+  cursor: pointer;
+  opacity: 0.9;
+}
 .current-health {
   font-size: 40px;
   position: absolute;
@@ -124,10 +181,13 @@ export default {
   color: rgb(255, 255, 255);
   text-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
 }
-
 .current-health span {
   font-weight: bold;
   color: rgb(242, 42, 20);
+}
+.enemy-name {
+  z-index: 10;
+  font-size: 18px;
 }
 .coins {
   display: flex;
@@ -135,7 +195,7 @@ export default {
   align-items: center;
   gap: 20px;
   font-size: 40px;
-  margin-top: 25px;
+  margin-top: 35px;
   color: rgb(214, 239, 21);
   text-shadow: 2px 4px 6px rgba(0, 0, 0, 0.5);
 }

@@ -8,6 +8,7 @@
 </template>
 
 <script>
+import slashSound from '../assets/audio/slash.mp3'
 import { gsap } from 'gsap';
 export default {
   name: 'MyButtons',
@@ -19,6 +20,9 @@ export default {
     handleClick() {
       const enemy = this.enemies
       enemy.displaying.currentHealth -= this.player.damage
+
+      const audio = new Audio(slashSound)
+      if (this.isAudio) { audio.play() }
     },
 
     onEnemyDeath() {
@@ -32,7 +36,7 @@ export default {
           minion.currentTypeIndex = Math.floor(Math.random() * minion.types.length)
           displaying.enemy = minion.types[minion.currentTypeIndex]
           displaying.currentHealth = displaying.totalHealth
-          const newCoins = 4 + this.stage ** 2.3
+          const newCoins = this.stage ** 2.1
           this.$store.commit('updateCoins', this.coins + newCoins);
           localStorage.setItem('coins', this.coins.toString());
 
@@ -49,10 +53,10 @@ export default {
       const displaying = this.enemies.displaying
       if (displaying.currentHealth <= 0) {
         this.$store.commit('updateStage')
-        const newCoins = 30 + this.stage ** 4.7
+        const newCoins = 20 + this.stage ** 2.17
         this.$store.commit('updateCoins', this.coins + newCoins)
    
-        minion.current = 1
+        minion.current = 0
         this.showMinion()
         this.enemies.boss.currentTime = this.enemies.boss.totalTime
         this.$store.commit('updateBossStatus', false);
@@ -70,7 +74,6 @@ export default {
       displaying.totalHealth = displaying.currentHealth
     },
 
-
     showBoss() {
       this.$store.commit('updateBossStatus', true);
       const displaying = this.enemies.displaying
@@ -78,8 +81,19 @@ export default {
 
       displaying.enemy = boss.types[0]
       displaying.name = boss.name
-      displaying.currentHealth = Math.ceil(boss.currentHealth * 2.2**this.stage)
-      displaying.totalHealth = Math.ceil(boss.currentHealth * 2.2**this.stage)
+      displaying.currentHealth = Math.ceil(boss.currentHealth * 2.15**this.stage)
+      displaying.totalHealth = Math.ceil(boss.currentHealth * 2.15**this.stage)
+    },
+
+    handleTrainingGround() {
+      const enemy = this.enemies
+
+      //when minions is 10/10 isBoss turns true for some reason.
+      enemy.minion.current -= 1
+      enemy.boss.currentTime = enemy.boss.totalTime
+
+      this.$store.commit('updateTrainingGroundStatus', true);
+      this.showMinion()
     },
 
     getImgUrl(url) {
@@ -102,15 +116,13 @@ export default {
       }
     },
 
-
-    'enemy.boss.currentTime'(newValue) {
+    'enemies.boss.currentTime'(newValue) {
       gsap.to(".boss-timer", {
         width: `${(newValue / this.enemies.boss.totalTime) * 100}% `,
         duration: 0.1,
         ease: "ease.inOut"
       })
     },
-
 
     'isBoss'() {
       if (this.isBoss) {
@@ -119,6 +131,7 @@ export default {
        
         // Create a new interval for the boss countdown
         this.bossInterval = setInterval(() => {
+          console.log(1)
           if (this.enemies.boss.currentTime <= 0) {
             this.handleTrainingGround();
           } else {
@@ -130,6 +143,12 @@ export default {
         clearInterval(this.bossInterval);
       }
     },
+
+    'isTrainingGround' (newValue) {
+      if (!newValue) {
+        this.showBoss()
+      }
+    }
   },
 
   computed: {
@@ -138,7 +157,8 @@ export default {
     coins() {return this.$store.state.coins},
     stage() {return this.$store.state.stage},
     isTrainingGround() {return this.$store.state.isTrainingGround},
-    isBoss() {return this.$store.state.isBoss}
+    isBoss() {return this.$store.state.isBoss},
+    isAudio() {return this.$store.state.isAudio}
   }
 }
 </script>
@@ -156,12 +176,12 @@ export default {
   width: 430px;
   transition: ease-in-out 0.3s
 }
-.enemy-box:hover {
+.enemy-box img:hover {
   opacity: 0.98;
   cursor: pointer;
 }
-.enemy-box:active {
-  transform: scale(1.01) translateY(-5px);
+.enemy-box img:active {
+  transform: scale(1.14) translateY(-5px);
 }
 
 </style>
